@@ -212,6 +212,59 @@ function bigBox(k, v, cls, x, badge){
           <div class="x">${x||''}</div>${badge?`<div class="badge ${cls==='low'?'':cls}">${badge}</div>`:''}</div>`;
 }
 
+
+/* ============================================================
+   KDIGO CKD 熱區圖（KDIGO 2024 CKD Guideline, Figure 13）
+   顏色＝進展風險；格內數字＝建議每年監測次數
+   ============================================================ */
+const KDIGO_G = [['G1','≥90','正常或偏高'],['G2','60–89','輕度下降'],['G3a','45–59','輕至中度下降'],
+                 ['G3b','30–44','中至重度下降'],['G4','15–29','重度下降'],['G5','<15','腎衰竭']];
+const KDIGO_A = [['A1','&lt;30','正常至輕度上升'],['A2','30–299','中度上升'],['A3','≥300','重度上升']];
+/* 每列 = [顏色, 顏色, 顏色] 對應 A1/A2/A3 */
+const KDIGO_COLOR = [
+  ['g','y','o'],   // G1
+  ['g','y','o'],   // G2
+  ['y','o','r'],   // G3a
+  ['o','r','r'],   // G3b
+  ['r','r','dr'],  // G4
+  ['dr','dr','dr'] // G5
+];
+/* 建議每年監測次數 */
+const KDIGO_FREQ = [
+  ['1','1','3'], ['1','1','3'], ['1','2','3'],
+  ['2','3','3'], ['3','3','4+'], ['4+','4+','4+']
+];
+const KDIGO_LABEL = {g:'低風險', y:'中度上升', o:'高風險', r:'極高風險', dr:'極高風險'};
+
+function gIndex(e){ return e>=90?0 : e>=60?1 : e>=45?2 : e>=30?3 : e>=15?4 : 5; }
+function aIndex(a){ return a<30?0 : a<300?1 : 2; }
+
+function kdigoGrid(egfr, acr){
+  const gi = gIndex(egfr), ai = aIndex(acr);
+  const head = `<tr><th class="corner">GFR 分級<br><span>mL/min/1.73m²</span></th>` +
+    KDIGO_A.map(([k,r,d])=>`<th>${k}<br><span>${r} mg/g</span><br><span>${d}</span></th>`).join('') + '</tr>';
+  const body = KDIGO_G.map(([gk,gr,gd],i)=>{
+    const cells = KDIGO_COLOR[i].map((c,j)=>{
+      const here = (i===gi && j===ai);
+      return `<td class="kd ${c}${here?' here':''}">${KDIGO_FREQ[i][j]}${here?'<b>你在這裡</b>':''}</td>`;
+    }).join('');
+    return `<tr><th class="rowh${i===gi?' hi':''}">${gk}<br><span>${gr}・${gd}</span></th>${cells}</tr>`;
+  }).join('');
+  return `
+    <div class="kdigo-wrap">
+      <h4>KDIGO CKD 分級熱區圖</h4>
+      <div class="kdigo-scroll"><table class="kdigo">${head}${body}</table></div>
+      <div class="kdigo-legend">
+        <span class="sw g"></span>低風險<span class="sw y"></span>中度上升
+        <span class="sw o"></span>高風險<span class="sw r"></span>極高風險
+      </div>
+      <p class="note">格內數字為 KDIGO 建議的<strong>每年監測次數</strong>（eGFR 與尿液白蛋白）。
+      本例落在 <strong>${KDIGO_G[gi][0]}／${KDIGO_A[ai][0]}</strong>，屬<strong>${KDIGO_LABEL[KDIGO_COLOR[gi][ai]]}</strong>，
+      建議每年追蹤 <strong>${KDIGO_FREQ[gi][ai]}</strong> 次。
+      綠色格若沒有其他腎臟病變證據，並不算 CKD。（KDIGO 2024 CKD Guideline, Figure 13）</p>
+    </div>`;
+}
+
 /* ============================================================
    KFRE 面板
    ============================================================ */
@@ -224,6 +277,9 @@ function initKFRE(){
   fill($('k_phos'), opts(range(1.5,10.0,0.1), v=>v.toFixed(1)), 3.9);
   fill($('k_bic'),  opts(range(10,35,1)), 24);
   fill($('k_ca'),   opts(range(6.0,12.0,0.1), v=>v.toFixed(1)), 9.2);
+
+  const albFmt = () => $('k_albUnit').value==='gdl' ? (v=>v.toFixed(1)) : (v=>(v*10).toFixed(0));
+  $('k_albUnit').addEventListener('change', ()=>{ relabel($('k_alb'), range(1.5,5.5,0.1), albFmt()); });
 
   const acrFmt = () => $('k_acrUnit').value==='mgg'
       ? (v=>`${v}（${acrBand(v)}）`)
@@ -241,7 +297,7 @@ function initKFRE(){
     const r = use8 ? r8 : r4;
     const row8 = use8
       ? `<tr class="sel"><td>8 變數（＋白蛋白、磷、HCO₃⁻、鈣）</td><td>${pct(r8.y2)}%</td><td>${pct(r8.y5)}%</td></tr>`
-      : `<tr><td>8 變數（＋白蛋白、磷、HCO₃⁻、鈣）</td><td colspan="2" style="text-align:left;color:var(--muted)">展開下方「選填」區、填入四項生化值並勾選後顯示</td></tr>`;
+      : `<tr class="no-print"><td>8 變數（＋白蛋白、磷、HCO₃⁻、鈣）</td><td colspan="2" style="text-align:left;color:var(--muted)">展開下方「選填」區、填入四項生化值並勾選後顯示</td></tr>`;
 
     const c2 = r.y2*100>40 ? 'vhigh' : (r.y2*100>10 ? 'high' : 'low');
     const c5 = r.y5*100>=5 ? 'high' : (r.y5*100>=3 ? 'mod' : 'low');
@@ -265,7 +321,8 @@ function initKFRE(){
           ${row8}
         </tbody>
       </table>
-      ${egfr>=60?'<div class="warn">KFRE 是在 CKD G3–G5 族群開發的，eGFR ≥ 60 時結果不可靠。</div>':''}`;
+      ${egfr>=60?'<div class="warn">KFRE 是在 CKD G3–G5 族群開發的，eGFR ≥ 60 時結果不可靠。</div>':''}
+      ${kdigoGrid(egfr, acr)}`;
   }
   // 8 變數開關（放進 optional 區塊）
   const opt = document.querySelector('#panel-kfre details.optional');
@@ -290,7 +347,7 @@ function buildFields(host, pfx, kind){
   rows.push(`<div class="field"><label>收縮壓 SBP</label><select id="${pfx}_sbp"></select><span class="unit">mmHg</span></div>`);
   rows.push(`<div class="field"><label>總膽固醇 TC</label><select id="${pfx}_tc"></select>
              <select id="${pfx}_cholUnit" class="unit-sel"><option value="mgdl">mg/dL</option><option value="mmol">mmol/L</option></select></div>`);
-  rows.push(`<div class="field"><label>高密度脂蛋白 HDL-C</label><select id="${pfx}_hdl"></select><span class="unit">單位同上</span></div>`);
+  rows.push(`<div class="field"><label>高密度脂蛋白 HDL-C</label><select id="${pfx}_hdl"></select><span class="unit" id="${pfx}_hdlUnit">mg/dL（與 TC 同單位）</span></div>`);
   if (kind==='dm'){
     rows.push(`<div class="field"><label>糖尿病診斷年齡</label><select id="${pfx}_dxage"></select><span class="unit">歲</span></div>`);
     rows.push(`<div class="field"><label>HbA1c</label><select id="${pfx}_a1c"></select>
@@ -317,9 +374,11 @@ function buildFields(host, pfx, kind){
   fill($(`${pfx}_tc`),  opts(TC_LIST),  200);
   fill($(`${pfx}_hdl`), opts(HDL_LIST), 50);
   $(`${pfx}_cholUnit`).addEventListener('change', ()=>{
+    const mmol = $(`${pfx}_cholUnit`).value==='mmol';
     const f = cholFmt()();
     relabel($(`${pfx}_tc`), TC_LIST, f);
     relabel($(`${pfx}_hdl`), HDL_LIST, f);
+    $(`${pfx}_hdlUnit`).textContent = (mmol?'mmol/L':'mg/dL') + '（與 TC 同單位）';
   });
   if (kind==='dm'){
     fill($(`${pfx}_dxage`), opts(range(15,69,1)), 50);
@@ -511,6 +570,57 @@ function initHelper(){
   ['h_cr','h_age','h_sex'].forEach(id=>$(id).addEventListener('change', go));
   go();
 }
+
+
+/* ============================================================
+   列印評估摘要
+   ============================================================ */
+function collectInputs(panel){
+  const skipOptional = panel.id==='panel-kfre' && !(document.getElementById('k_use8')||{}).checked;
+  const rows = [];
+  panel.querySelectorAll('.field').forEach(f=>{
+    if (skipOptional && f.closest('details.optional')) return;
+    const label = f.querySelector('label'); if(!label) return;
+    const sels = [...f.querySelectorAll('select')];
+    const main = sels.find(x=>!x.classList.contains('unit-sel')); if(!main) return;
+    const val = main.options[main.selectedIndex]?.text.trim() || '';
+    const unitSel = sels.find(x=>x.classList.contains('unit-sel'));
+    const unit = unitSel ? unitSel.options[unitSel.selectedIndex].text.trim()
+                         : (f.querySelector('.unit')?.textContent.trim() || '');
+    rows.push([label.textContent.trim(), val, unit]);
+  });
+  return rows;
+}
+
+function printPanel(panelId){
+  const panel = document.getElementById(panelId);
+  const sheet = document.getElementById('printSheet');
+  const title = panel.querySelector('h2').textContent.trim();
+  const d = new Date();
+  const stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} `
+              + `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const inputs = collectInputs(panel).map(([k,v,u])=>
+    `<tr><th>${k}</th><td>${v}${u?` <span class="u">${u}</span>`:''}</td></tr>`).join('');
+
+  sheet.innerHTML = `
+    <div class="ps-head">
+      <div><h1>${title}</h1><p class="ps-sub">腎臟與心血管風險評估摘要</p></div>
+      <div class="ps-meta">列印時間：${stamp}<br>risk.drtsengshihting.com</div>
+    </div>
+    <div class="ps-cols">
+      <section class="ps-inputs"><h2>輸入條件</h2><table>${inputs}</table></section>
+      <section class="ps-result"><h2>評估結果</h2><div class="ps-body"></div></section>
+    </div>
+    <p class="ps-foot">本結果由已發表之風險預測模型計算，僅供醫療專業人員參考，不能取代臨床判斷。
+    計算於瀏覽器本機完成，未傳送任何資料。姓名與病歷號請自行填寫：____________________</p>`;
+  sheet.querySelector('.ps-body').appendChild(panel.querySelector('.result').cloneNode(true));
+  window.print();
+}
+
+document.addEventListener('click', e=>{
+  const b = e.target.closest('.print-btn');
+  if (b) printPanel(b.dataset.panel);
+});
 
 /* ============================================================
    分頁切換

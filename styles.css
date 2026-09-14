@@ -91,10 +91,66 @@ table.regions tr.sel{background:var(--brand-soft);font-weight:700}
 .disclaimer ul{margin:0;padding-left:1.2em;font-size:.89rem}
 footer{margin:24px auto 40px;color:var(--muted);font-size:.82rem;text-align:center}
 
+/* ---------- KDIGO 熱區圖 ---------- */
+.kdigo-wrap{margin-top:18px}
+.kdigo-wrap h4{margin:0 0 8px;font-size:.95rem}
+.kdigo-scroll{overflow-x:auto}
+table.kdigo{border-collapse:collapse;width:100%;min-width:430px;font-size:.8rem;text-align:center}
+table.kdigo th,table.kdigo td{border:1px solid var(--line);padding:6px 4px}
+table.kdigo thead th,table.kdigo th{background:var(--bg);font-weight:600}
+table.kdigo th span{font-weight:400;font-size:.72rem;color:var(--muted)}
+table.kdigo th.corner{width:34%}
+table.kdigo th.rowh{text-align:left;font-size:.78rem}
+table.kdigo th.rowh.hi{background:var(--brand-soft);color:var(--brand)}
+td.kd{font-weight:700;color:#1f2937;position:relative;min-width:80px}
+td.kd.g{background:#86efac} td.kd.y{background:#fde68a}
+td.kd.o{background:#fdba74} td.kd.r{background:#fca5a5} td.kd.dr{background:#f87171}
+td.kd.here{outline:3px solid #111;outline-offset:-3px}
+td.kd.here b{display:block;font-size:.68rem;font-weight:800;margin-top:2px}
+.kdigo-legend{margin-top:8px;font-size:.76rem;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.kdigo-legend .sw{display:inline-block;width:14px;height:12px;border:1px solid var(--line);margin-left:10px}
+.kdigo-legend .sw:first-child{margin-left:0}
+.sw.g{background:#86efac}.sw.y{background:#fde68a}.sw.o{background:#fdba74}.sw.r{background:#fca5a5}
+
+/* ---------- 列印鈕 ---------- */
+.actions{margin-top:14px}
+.print-btn{font:inherit;font-size:.86rem;padding:8px 16px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--brand);background:transparent;color:var(--brand)}
+.print-btn:hover{background:var(--brand);color:#fff}
+
+/* ---------- 列印版 ---------- */
+#printSheet{display:none}
 @media print{
-  .tabs,.helper,footer,.disclaimer{display:none}
-  body{background:#fff}
-  .card{break-inside:avoid;border-color:#999}
+  body > *{display:none !important}
+  body > #printSheet{display:block !important}
+  @page{size:A4 portrait;margin:14mm}
+  body{background:#fff;color:#000;font-size:10.5pt}
+  #printSheet{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ps-head{display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px}
+  .ps-head h1{margin:0;font-size:15pt}
+  .ps-sub{margin:2px 0 0;font-size:9pt;color:#444}
+  .ps-meta{font-size:8.5pt;color:#444;text-align:right}
+  .ps-cols{display:grid;grid-template-columns:34% 1fr;gap:14px;align-items:start}
+  #printSheet h2{font-size:10.5pt;margin:0 0 6px;border-bottom:1px solid #999;padding-bottom:3px}
+  .ps-inputs table{width:100%;border-collapse:collapse;font-size:9pt}
+  .ps-inputs th{text-align:left;font-weight:500;color:#333;padding:2.5px 6px 2.5px 0;width:46%;vertical-align:top}
+  .ps-inputs td{padding:2.5px 0;font-weight:700;vertical-align:top}
+  .ps-inputs .u{font-weight:400;color:#555;font-size:8pt}
+  #printSheet .no-print{display:none}
+  #printSheet .result{border:0;padding:0;margin:0}
+  #printSheet .big-row{display:flex;gap:8px}
+  #printSheet .big{border:1px solid #999;border-radius:6px;padding:8px;background:#fff}
+  #printSheet .big .v{font-size:19pt}
+  #printSheet .badge{border:1px solid #666;background:#fff !important;color:#000 !important}
+  #printSheet .interpret{background:#f2f2f2 !important;border:1px solid #ccc;font-size:9pt;padding:7px}
+  #printSheet .warn{border:1px solid #666;background:#fff !important;color:#000 !important;font-size:9pt}
+  #printSheet table.regions{font-size:8.5pt}
+  #printSheet table.regions tr.sel{background:#eee !important}
+  #printSheet .kdigo-wrap{margin-top:10px;break-inside:avoid}
+  #printSheet table.kdigo{font-size:8pt;min-width:0}
+  #printSheet .actions{display:none}
+  .ps-foot{margin-top:14px;padding-top:6px;border-top:1px solid #999;font-size:8pt;color:#333}
 }
 
 label.optin{display:flex;gap:8px;align-items:center;margin:10px 0 14px;font-size:.88rem}

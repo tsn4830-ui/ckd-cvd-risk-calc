@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>腎臟與心血管風險計算器｜KFRE．SCORE2 CKD Add-on．SCORE2-Diabetes．Asia-Pacific</title>
 <meta name="description" content="繁體中文的臨床風險計算工具：KFRE 腎衰竭風險、SCORE2／SCORE2-OP + CKD Add-on、SCORE2-Diabetes，全下拉選單操作，台灣常用單位。">
-<link rel="stylesheet" href="styles.css?v=20260914b">
+<link rel="stylesheet" href="styles.css?v=20260914c">
 </head>
 <body>
 <header class="site-header">
@@ -56,13 +56,15 @@
       <details class="optional">
         <summary>選填：加做 8 變數版本（需四項生化值）</summary>
         <div class="grid">
-          <div class="field"><label>血清白蛋白 Albumin</label><select id="k_alb"></select><span class="unit">g/dL</span></div>
+          <div class="field"><label>血清白蛋白 Albumin</label><select id="k_alb"></select>
+            <select id="k_albUnit" class="unit-sel"><option value="gdl">g/dL</option><option value="gl">g/L</option></select></div>
           <div class="field"><label>血清磷 Phosphorus</label><select id="k_phos"></select><span class="unit">mg/dL</span></div>
-          <div class="field"><label>碳酸氫根 HCO₃⁻</label><select id="k_bic"></select><span class="unit">mEq/L</span></div>
+          <div class="field"><label>碳酸氫根 HCO₃⁻</label><select id="k_bic"></select><span class="unit">mEq/L（＝ mmol/L）</span></div>
           <div class="field"><label>血清鈣 Calcium</label><select id="k_ca"></select><span class="unit">mg/dL</span></div>
         </div>
       </details>
       <div class="result" id="k_result"></div>
+      <div class="actions"><button type="button" class="print-btn" data-panel="panel-kfre">🖨 列印此次評估</button></div>
     </div>
     <div class="card info">
       <h3>結果怎麼用（KDIGO 2024 CKD 指引）</h3>
@@ -83,6 +85,7 @@
       <p class="lead">預測 <strong>10 年內致死與非致死心血管事件</strong>的風險。CKD Add-on 依 eGFR 與 uACR 調整原始 SCORE2 估計值。適用於<strong>沒有已知心血管疾病</strong>的人。</p>
       <div class="grid" id="g_s2"></div>
       <div class="result" id="s2_result"></div>
+      <div class="actions"><button type="button" class="print-btn" data-panel="panel-s2">🖨 列印此次評估</button></div>
     </div>
     <div class="card info" id="s2_info"></div>
   </section>
@@ -94,6 +97,7 @@
       <p class="lead">SCORE2 的高齡版本（Older Persons），已針對競爭死亡風險調整。同樣可加上 CKD Add-on。</p>
       <div class="grid" id="g_s2op"></div>
       <div class="result" id="s2op_result"></div>
+      <div class="actions"><button type="button" class="print-btn" data-panel="panel-s2op">🖨 列印此次評估</button></div>
     </div>
     <div class="card info" id="s2op_info"></div>
   </section>
@@ -105,6 +109,7 @@
       <p class="lead">在 SCORE2 基礎上加入<strong>糖尿病診斷年齡、HbA1c、eGFR</strong>，適用於<strong>第 2 型糖尿病且尚無心血管疾病</strong>的成人。</p>
       <div class="grid" id="g_s2dm"></div>
       <div class="result" id="s2dm_result"></div>
+      <div class="actions"><button type="button" class="print-btn" data-panel="panel-s2dm">🖨 列印此次評估</button></div>
     </div>
     <div class="card info" id="s2dm_info"></div>
   </section>
@@ -129,6 +134,7 @@
       </div>
       <div class="grid" id="g_s2ap"></div>
       <div class="result" id="s2ap_result"></div>
+      <div class="actions"><button type="button" class="print-btn" data-panel="panel-s2ap">🖨 列印此次評估</button></div>
     </div>
     <div class="card info" id="s2ap_info"></div>
   </section>
@@ -162,6 +168,7 @@
   <p>曾士婷醫師 ・ 內分泌暨新陳代謝科 ・ 本頁資料不離開你的裝置</p>
 </footer>
 
-<script src="app.js?v=20260914b"></script>
+<div id="printSheet" aria-hidden="true"></div>
+<script src="app.js?v=20260914c"></script>
 </body>
 </html>
