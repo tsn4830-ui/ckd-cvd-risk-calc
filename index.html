@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>腎臟與心血管風險計算器｜KFRE．SCORE2 CKD Add-on．SCORE2-Diabetes</title>
+<title>腎臟與心血管風險計算器｜KFRE．SCORE2 CKD Add-on．SCORE2-Diabetes．Asia-Pacific</title>
 <meta name="description" content="繁體中文的臨床風險計算工具：KFRE 腎衰竭風險、SCORE2／SCORE2-OP + CKD Add-on、SCORE2-Diabetes，全下拉選單操作，台灣常用單位。">
-<link rel="stylesheet" href="styles.css?v=20260914">
+<link rel="stylesheet" href="styles.css?v=20260914b">
 </head>
 <body>
 <header class="site-header">
   <div class="wrap">
     <h1>腎臟與心血管風險計算器</h1>
-    <p class="sub">KFRE 腎衰竭風險 ・ SCORE2／SCORE2-OP + CKD Add-on ・ SCORE2-Diabetes<br>
+    <p class="sub">KFRE 腎衰竭風險 ・ SCORE2／SCORE2-OP + CKD Add-on ・ SCORE2-Diabetes ・ SCORE2-Asia-Pacific<br>
     全下拉選單操作，預設台灣常用單位（mg/dL、mg/g、HbA1c %）</p>
   </div>
 </header>
@@ -21,6 +21,7 @@
   <button class="tab" data-panel="s2">SCORE2 + CKD<span>40–69 歲</span></button>
   <button class="tab" data-panel="s2op">SCORE2-OP + CKD<span>70–89 歲</span></button>
   <button class="tab" data-panel="s2dm">SCORE2-Diabetes<span>第 2 型糖尿病 40–69 歲</span></button>
+  <button class="tab" data-panel="s2ap">SCORE2-Asia-Pacific<span>亞太校正・40–69 歲</span></button>
 </nav>
 
 <main class="wrap">
@@ -108,11 +109,35 @@
     <div class="card info" id="s2dm_info"></div>
   </section>
 
+
+  <!-- ============ SCORE2-Asia-Pacific ============ -->
+  <section class="panel" id="panel-s2ap">
+    <div class="card">
+      <h2>SCORE2-Asia-Pacific｜亞太校正・40–69 歲</h2>
+      <p class="lead">與 SCORE2 同一組係數，但改用<strong>亞太四個風險地區</strong>的校正因子（依 WHO 各國年齡性別標準化心血管死亡率分區）。適用於<strong>沒有心血管疾病、也沒有糖尿病</strong>的 40–69 歲成人。</p>
+      <div class="tw-box" id="twBox">
+        <h3>台灣算哪一區？</h3>
+        <p><strong>原論文的國家清單裡沒有台灣</strong>——分區是依 WHO Global Health Estimates 的各國資料做的，而 WHO 統計不含台灣，所以官方沒有給台灣一個區。</p>
+        <p>分區門檻本身是客觀的（年齡性別標準化心血管死亡率，每十萬人年）：<strong>低 &lt;100、中 100–&lt;150、高 150–&lt;300、極高 ≥300</strong>。用同一個資料源（IHME GBD）橫向比較：</p>
+        <ul class="tw-cmp">
+          <li>日本 <b>77</b>（論文列為低風險區）</li>
+          <li>新加坡 <b>85</b>（低風險區）</li>
+          <li><b>台灣 90</b> ←</li>
+          <li>泰國 <b>103</b>（論文列為中風險區）</li>
+        </ul>
+        <p><strong>結論：台灣最接近「低風險區」，但離低／中的分界不遠。</strong>本站預設選低風險區，下方同時列出四區數值；臨床判讀建議把「低」與「中」都看一眼當作區間。這是本站依公開資料做的對應，<strong>不是原論文的官方分類</strong>。</p>
+      </div>
+      <div class="grid" id="g_s2ap"></div>
+      <div class="result" id="s2ap_result"></div>
+    </div>
+    <div class="card info" id="s2ap_info"></div>
+  </section>
+
   <section class="card disclaimer">
     <h3>使用限制與免責</h3>
     <ul>
       <li>本工具僅供<strong>醫療專業人員參考</strong>，不能取代臨床判斷，也不是診斷或治療建議。</li>
-      <li><strong>SCORE2 系列是以歐洲族群開發並校正</strong>（低／中／高／極高風險四個歐洲地區）。台灣不屬於這四區，直接套用可能高估或低估；解讀時請留意。2024 年已有針對亞太地區重新校正的 <em>SCORE2-Asia-Pacific</em>，若需要可另外加入本站。</li>
+      <li><strong>SCORE2 系列是以歐洲族群開發並校正</strong>（低／中／高／極高風險四個歐洲地區）。台灣不屬於這四區，直接套用可能高估或低估；解讀時請留意。本站已加入 <em>SCORE2-Asia-Pacific</em> 分頁（亞太四區校正），台灣的歸屬見該分頁說明。</li>
       <li>SCORE2／SCORE2-OP 僅適用於<strong>未曾發生心血管疾病</strong>者。已有 ASCVD、家族性高膽固醇血症或嚴重標的器官損傷者，本來就屬高／極高風險，不需再算。</li>
       <li>依 ESC 2021 指引，<strong>中重度 CKD 本身即歸為高或極高心血管風險</strong>；CKD Add-on 的價值在於把風險量化得更精準，而不是用來把病人降級。</li>
       <li>KFRE 僅適用於 CKD G3–G5。</li>
@@ -127,6 +152,7 @@
       <li><strong>SCORE2 / SCORE2-OP</strong>：SCORE2 working group. <em>Eur Heart J</em> 2021;42:2439-54；SCORE2-OP working group. <em>Eur Heart J</em> 2021;42:2455-67。</li>
       <li><strong>CKD Add-on</strong>：Matsushita K, et al.（CKD-PC）<em>Eur J Prev Cardiol</em> 2023;30:8-16。本站演算法已與 CKD-PC 官方計算器（ckdpcrisk.org）針對 40–85 歲、雙性別、四個風險地區、eGFR 15–120、uACR 5–1500 共 280 組數值<strong>逐一比對完全吻合</strong>。</li>
       <li><strong>SCORE2-Diabetes</strong>：SCORE2-Diabetes working group. <em>Eur Heart J</em> 2023;44:2544-56。以論文內文範例（中風險區 60 歲男性等四組）驗證吻合。</li>
+      <li><strong>SCORE2-Asia-Pacific</strong>：SCORE2 Asia-Pacific collaborators. <em>Eur Heart J</em> 2025;46:702-15。校正因子取自該文 Supplementary Table 5，並以內文範例（50 歲、SBP 140、TC 5.5、HDL 1.3 之男女，低與極高風險區）驗證吻合。</li>
       <li><strong>風險分級</strong>：ESC 2021 CVD Prevention Guideline（年齡分層門檻）；ESC 2023 Diabetes Guideline（SCORE2-Diabetes 分級）；KDIGO 2024 CKD Guideline（KFRE 門檻）。</li>
     </ul>
   </section>
@@ -136,6 +162,6 @@
   <p>曾士婷醫師 ・ 內分泌暨新陳代謝科 ・ 本頁資料不離開你的裝置</p>
 </footer>
 
-<script src="app.js?v=20260914"></script>
+<script src="app.js?v=20260914b"></script>
 </body>
 </html>

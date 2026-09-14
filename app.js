@@ -21,6 +21,18 @@ const SCOP = { low:{m:[-0.34,1.19], f:[-0.52,1.01]},
                vh:{m:[ 0.05,0.70], f:[ 0.38,0.69]} };
 const REGIONS = [['low','低風險地區'],['mod','中風險地區'],['high','高風險地區'],['vh','極高風險地區']];
 
+/* ---------- SCORE2-Asia-Pacific 地區校正因子（Eur Heart J 2025;46:702 Supplementary Table 5）---------- */
+const AP = { low:{m:[-0.375229965,0.62020875],  f:[-0.986572446,0.536743779]},
+             mod:{m:[ 0.284885676,0.778128607], f:[ 0.082786870,0.718980326]},
+             high:{m:[ 0.778231091,0.844985356], f:[ 0.611474287,0.703624072]},
+             vh:{m:[ 0.608975204,0.679014197], f:[ 0.502751798,0.555577072]} };
+const AP_SHORT = {low:'低風險區', mod:'中風險區', high:'高風險區', vh:'極高風險區'};
+const AP_REGIONS = [
+  ['low','低風險區（台灣＊、日本、南韓、香港、新加坡、澳洲、紐西蘭）'],
+  ['mod','中風險區（泰國、斯里蘭卡）'],
+  ['high','高風險區（中國、馬來西亞、越南、印度、汶萊、柬埔寨等）'],
+  ['vh','極高風險區（印尼、菲律賓、緬甸、蒙古、寮國等）'] ];
+
 /* ---------- SCORE2 / SCORE2-OP ---------- */
 function score2(p){                       // p: {sex,age,smoke,sbp,tc,hdl,dm,region}  tc/hdl 單位 mmol/L
   const {sex,age,smoke,sbp,tc,hdl,dm,region} = p;
@@ -107,6 +119,26 @@ function score2dm(p){                     // a1c 單位 mmol/mol；tc/hdl mmol/L
   }
   const u = 1 - Math.pow(S0, Math.exp(lp));
   const s = SC[region][sex];
+  return 1 - Math.exp(-Math.exp(s[0] + s[1]*Math.log(-Math.log(1-u))));
+}
+
+/* ---------- SCORE2-Asia-Pacific ----------
+   核心係數與 SCORE2 完全相同（S0：男 0.9605、女 0.9776），只換地區校正因子。 */
+function score2ap(p){
+  const {sex,age,smoke,sbp,tc,hdl,dm,region} = p;
+  const ca=(age-60)/5, cs=(sbp-120)/20, ct=tc-6, ch=(hdl-1.3)/0.5;
+  let lp, S0;
+  if (sex==='m'){
+    lp = 0.3742*ca + 0.6012*smoke + 0.2777*cs + 0.6457*dm + 0.1458*ct - 0.2698*ch
+       - 0.0755*ca*smoke - 0.0255*ca*cs - 0.0281*ca*ct + 0.0426*ca*ch - 0.0983*ca*dm;
+    S0 = 0.9605;
+  } else {
+    lp = 0.4648*ca + 0.7744*smoke + 0.3131*cs + 0.8096*dm + 0.1002*ct - 0.2606*ch
+       - 0.1088*ca*smoke - 0.0277*ca*cs - 0.0226*ca*ct + 0.0613*ca*ch - 0.1272*ca*dm;
+    S0 = 0.9776;
+  }
+  const u = 1 - Math.pow(S0, Math.exp(lp));
+  const s = AP[region][sex];
   return 1 - Math.exp(-Math.exp(s[0] + s[1]*Math.log(-Math.log(1-u))));
 }
 
@@ -264,14 +296,18 @@ function buildFields(host, pfx, kind){
     rows.push(`<div class="field"><label>HbA1c</label><select id="${pfx}_a1c"></select>
                <select id="${pfx}_a1cUnit" class="unit-sel"><option value="ngsp">%（NGSP）</option><option value="ifcc">mmol/mol（IFCC）</option></select></div>`);
     rows.push(`<div class="field"><label>eGFR</label><select id="${pfx}_egfr"></select><span class="unit">mL/min/1.73m²（必填）</span></div>`);
+  } else if (kind==='ap'){
+    rows.push(`<div class="field"><label>糖尿病</label><select id="${pfx}_dm"><option value="0">無</option><option value="1">有</option></select></div>`);
   } else {
     rows.push(`<div class="field"><label>糖尿病</label><select id="${pfx}_dm"><option value="0">無</option><option value="1">有</option></select></div>`);
     rows.push(`<div class="field"><label>eGFR</label><select id="${pfx}_egfr"></select><span class="unit">mL/min/1.73m²</span></div>`);
     rows.push(`<div class="field"><label>尿液白蛋白／肌酸酐比 uACR</label><select id="${pfx}_acr"></select>
                <select id="${pfx}_acrUnit" class="unit-sel"><option value="mgg">mg/g</option><option value="mgmmol">mg/mmol</option></select></div>`);
   }
-  rows.push(`<div class="field"><label>風險地區（歐洲校正）</label><select id="${pfx}_region">
-             ${REGIONS.map(([v,t])=>`<option value="${v}"${v==='mod'?' selected':''}>${t}</option>`).join('')}</select></div>`);
+  const regList = kind==='ap' ? AP_REGIONS : REGIONS;
+  const regDefault = kind==='ap' ? 'low' : 'mod';
+  rows.push(`<div class="field wide"><label>風險地區（${kind==='ap'?'亞太校正':'歐洲校正'}）</label><select id="${pfx}_region">
+             ${regList.map(([v,t])=>`<option value="${v}"${v===regDefault?' selected':''}>${t}</option>`).join('')}</select></div>`);
   host.innerHTML = rows.join('');
 
   const $ = id => document.getElementById(id);
@@ -293,7 +329,7 @@ function buildFields(host, pfx, kind){
       const ifcc = $(`${pfx}_a1cUnit`).value==='ifcc';
       relabel($(`${pfx}_a1c`), A1C_LIST, ifcc ? (v=>Math.round(ngsp2ifcc(v))) : (v=>v.toFixed(1)));
     });
-  } else {
+  } else if (kind!=='ap'){
     fill($(`${pfx}_egfr`), [[ '', '未檢驗（不計 Add-on）' ]].concat(opts(range(15,140,1), v=>`${v}（${gBand(v)}）`)), 60);
     fill($(`${pfx}_acr`),  [[ '', '未檢驗（僅用 eGFR）' ]].concat(opts(ACR_LIST, v=>`${v}（${acrBand(v)}）`)), 30);
     $(`${pfx}_acrUnit`).addEventListener('change', ()=>{
@@ -317,8 +353,8 @@ function readCommon(pfx){
   };
 }
 
-function regionTable(rowsFn, selected){
-  const rows = REGIONS.map(([k,label])=>{
+function regionTable(rowsFn, selected, list){
+  const rows = (list||REGIONS).map(([k,label])=>{
     const cells = rowsFn(k);
     return `<tr class="${k===selected?'sel':''}"><td>${label}</td>${cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
   }).join('');
@@ -420,6 +456,48 @@ function initSCORE2DM(){
 }
 
 /* ============================================================
+   SCORE2-Asia-Pacific 面板
+   ============================================================ */
+function initSCORE2AP(){
+  buildFields(document.getElementById('g_s2ap'), 's2ap', 'ap');
+  const $ = id => document.getElementById(id);
+  function calc(){
+    const c = readCommon('s2ap');
+    const dm = +$('s2ap_dm').value;
+    const p = {...c, dm};
+    const r = score2ap(p);
+    const [cls, label, thr] = clsSCORE2(r, c.age);
+    const rLow = score2ap({...p, region:'low'}), rMod = score2ap({...p, region:'mod'});
+    $('s2ap_result').innerHTML = `
+      <div class="big-row">
+        ${bigBox('10 年心血管風險（亞太校正）', pct(r)+'%', cls, AP_SHORT[c.region], label)}
+        ${bigBox('台灣合理區間（低～中風險區）', `${pct(rLow)}–${pct(rMod)}%`, 'low', '兩區並列供判讀')}
+      </div>
+      <div class="interpret">
+        <strong>${c.age} 歲的分級門檻</strong>：低至中度 &lt; ${thr[0]}%、高風險 ${thr[0]}–&lt;${thr[1]}%、極高風險 ≥ ${thr[1]}%（ESC 2021）。
+        ${dm?'<br><strong>注意</strong>：本模型的目標族群是<strong>沒有糖尿病</strong>的人（糖尿病係數只是校正時用到）。有第 2 型糖尿病請改用 SCORE2-Diabetes 分頁，但要知道該模型只有歐洲校正版。':''}
+      </div>
+      <table class="regions">
+        <thead><tr><th>亞太風險地區</th><th>10 年心血管風險</th></tr></thead>
+        <tbody>${regionTable(k=>[pct(score2ap({...p, region:k}))+'%'], c.region, AP_REGIONS)}</tbody>
+      </table>`;
+  }
+  document.querySelectorAll('#panel-s2ap select').forEach(el=>el.addEventListener('change', calc));
+  calc();
+
+  $('s2ap_info').innerHTML = `
+    <h3>這個模型算什麼</h3>
+    <ul>
+      <li><strong>和 SCORE2 的差別只在校正因子</strong>：預測變數與係數完全相同（連基準存活率 0.9605／0.9776 都一樣），差別在把風險縮放到亞太各國實際的心血管發生率，而不是歐洲的。</li>
+      <li><strong>分區依據</strong>：WHO Global Health Estimates 2019 各國年齡性別標準化心血管死亡率（ICD-10 第九章 I00–I99），門檻為低 &lt;100、中 100–&lt;150、高 150–&lt;300、極高 ≥300 每十萬人年。</li>
+      <li><strong>適用對象</strong>：40–69 歲、<strong>無心血管疾病且無糖尿病</strong>。沒有高齡版（無 SCORE2-OP-Asia-Pacific），70 歲以上目前只能用歐洲校正的 SCORE2-OP。</li>
+      <li><strong>沒有搭配 CKD Add-on</strong>：CKD Add-on 是在歐洲校正版的 SCORE2／SCORE2-OP 上開發與驗證的，套到亞太校正版屬於未驗證的組合，本站不提供，以免給出看似精確但沒有依據的數字。</li>
+      <li>外部驗證的 pooled C-index 為 0.710（95% CI 0.677–0.744），資料來自 12 國 13 個世代、956 萬人。</li>
+    </ul>
+    <p class="cite">SCORE2 Asia-Pacific collaborators. Risk prediction of cardiovascular disease in the Asia-Pacific region: the SCORE2 Asia-Pacific model. <em>Eur Heart J</em> 2025;46:702-15．</p>`;
+}
+
+/* ============================================================
    eGFR 換算小工具
    ============================================================ */
 function initHelper(){
@@ -449,3 +527,4 @@ initKFRE();
 initSCORE2('s2',  'panel-s2',  'std');
 initSCORE2('s2op','panel-s2op','op');
 initSCORE2DM();
+initSCORE2AP();
