@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>腎臟與心血管風險計算器｜KFRE．SCORE2 CKD Add-on．SCORE2-Diabetes</title>
+<meta name="description" content="繁體中文的臨床風險計算工具：KFRE 腎衰竭風險、SCORE2／SCORE2-OP + CKD Add-on、SCORE2-Diabetes，全下拉選單操作，台灣常用單位。">
+<link rel="stylesheet" href="styles.css?v=20260914">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <h1>腎臟與心血管風險計算器</h1>
+    <p class="sub">KFRE 腎衰竭風險 ・ SCORE2／SCORE2-OP + CKD Add-on ・ SCORE2-Diabetes<br>
+    全下拉選單操作，預設台灣常用單位（mg/dL、mg/g、HbA1c %）</p>
+  </div>
+</header>
+
+<nav class="tabs wrap" id="tabs">
+  <button class="tab active" data-panel="kfre">KFRE<span>腎衰竭風險</span></button>
+  <button class="tab" data-panel="s2">SCORE2 + CKD<span>40–69 歲</span></button>
+  <button class="tab" data-panel="s2op">SCORE2-OP + CKD<span>70–89 歲</span></button>
+  <button class="tab" data-panel="s2dm">SCORE2-Diabetes<span>第 2 型糖尿病 40–69 歲</span></button>
+</nav>
+
+<main class="wrap">
+
+  <!-- ============ eGFR 換算小工具 ============ -->
+  <details class="helper" id="egfrHelper">
+    <summary>由血清肌酸酐換算 eGFR（CKD-EPI 2021，不含種族係數）</summary>
+    <div class="helper-body">
+      <div class="field"><label>血清肌酸酐 Cr</label><select id="h_cr"></select><span class="unit">mg/dL</span></div>
+      <div class="field"><label>年齡</label><select id="h_age"></select><span class="unit">歲</span></div>
+      <div class="field"><label>性別</label><select id="h_sex"><option value="m">男</option><option value="f">女</option></select></div>
+      <div class="helper-out" id="h_out">eGFR：—</div>
+      <p class="note">提示：KFRE 與 SCORE2 系列模型在原始論文中使用 CKD-EPI 2009 公式；台灣多數醫院報告 MDRD 或 CKD-EPI。此處提供 CKD-EPI 2021（去種族）僅作快速估算參考，實際請以檢驗報告的 eGFR 為準。</p>
+    </div>
+  </details>
+
+  <!-- ============ KFRE ============ -->
+  <section class="panel active" id="panel-kfre">
+    <div class="card">
+      <h2>KFRE｜腎衰竭風險方程式（Kidney Failure Risk Equation）</h2>
+      <p class="lead">預測 <strong>CKD G3–G5（eGFR &lt; 60）</strong> 病人在 <strong>2 年與 5 年內進展至腎衰竭（需透析或移植）</strong> 的機率。若有血清白蛋白、磷、碳酸氫根、鈣，可展開下方選填區改用 8 變數版本。</p>
+      <div class="grid">
+        <div class="field"><label>年齡</label><select id="k_age"></select><span class="unit">歲</span></div>
+        <div class="field"><label>性別</label><select id="k_sex"><option value="m">男</option><option value="f">女</option></select></div>
+        <div class="field"><label>eGFR</label><select id="k_egfr"></select><span class="unit">mL/min/1.73m²</span></div>
+        <div class="field"><label>尿液白蛋白／肌酸酐比 uACR</label><select id="k_acr"></select>
+          <select id="k_acrUnit" class="unit-sel"><option value="mgg">mg/g</option><option value="mgmmol">mg/mmol</option></select></div>
+        <div class="field"><label>族群校正</label><select id="k_region">
+            <option value="non">非北美（台灣建議用此）</option>
+            <option value="na">北美</option></select></div>
+      </div>
+      <details class="optional">
+        <summary>選填：加做 8 變數版本（需四項生化值）</summary>
+        <div class="grid">
+          <div class="field"><label>血清白蛋白 Albumin</label><select id="k_alb"></select><span class="unit">g/dL</span></div>
+          <div class="field"><label>血清磷 Phosphorus</label><select id="k_phos"></select><span class="unit">mg/dL</span></div>
+          <div class="field"><label>碳酸氫根 HCO₃⁻</label><select id="k_bic"></select><span class="unit">mEq/L</span></div>
+          <div class="field"><label>血清鈣 Calcium</label><select id="k_ca"></select><span class="unit">mg/dL</span></div>
+        </div>
+      </details>
+      <div class="result" id="k_result"></div>
+    </div>
+    <div class="card info">
+      <h3>結果怎麼用（KDIGO 2024 CKD 指引）</h3>
+      <ul>
+        <li><strong>5 年風險 3–5%</strong>：可作為<strong>轉介腎臟科</strong>的參考門檻（Practice Point 2.2.1）。</li>
+        <li><strong>2 年風險 &gt; 10%</strong>：安排<strong>多專科團隊照護</strong>的時機（Practice Point 2.2.2）。</li>
+        <li><strong>2 年風險 &gt; 40%</strong>：開始<strong>腎臟替代治療（KRT）衛教、血管通路規劃或轉介移植</strong>（Practice Point 2.2.3）。</li>
+        <li>模型是在 CKD G3–G5 族群開發的，<strong>不適用於 G1–G2</strong>（Practice Point 2.2.4）；IgA 腎病變與 ADPKD 請用疾病專屬模型。</li>
+      </ul>
+      <p class="cite">Tangri N, et al. <em>JAMA</em> 2011;305:1553-9．Tangri N, et al. <em>JAMA</em> 2016;315:164-74（多國校正）．KDIGO 2024 CKD Guideline．</p>
+    </div>
+  </section>
+
+  <!-- ============ SCORE2 + CKD ============ -->
+  <section class="panel" id="panel-s2">
+    <div class="card">
+      <h2>SCORE2 + CKD Add-on｜40–69 歲</h2>
+      <p class="lead">預測 <strong>10 年內致死與非致死心血管事件</strong>的風險。CKD Add-on 依 eGFR 與 uACR 調整原始 SCORE2 估計值。適用於<strong>沒有已知心血管疾病</strong>的人。</p>
+      <div class="grid" id="g_s2"></div>
+      <div class="result" id="s2_result"></div>
+    </div>
+    <div class="card info" id="s2_info"></div>
+  </section>
+
+  <!-- ============ SCORE2-OP + CKD ============ -->
+  <section class="panel" id="panel-s2op">
+    <div class="card">
+      <h2>SCORE2-OP + CKD Add-on｜70–89 歲</h2>
+      <p class="lead">SCORE2 的高齡版本（Older Persons），已針對競爭死亡風險調整。同樣可加上 CKD Add-on。</p>
+      <div class="grid" id="g_s2op"></div>
+      <div class="result" id="s2op_result"></div>
+    </div>
+    <div class="card info" id="s2op_info"></div>
+  </section>
+
+  <!-- ============ SCORE2-Diabetes ============ -->
+  <section class="panel" id="panel-s2dm">
+    <div class="card">
+      <h2>SCORE2-Diabetes｜第 2 型糖尿病 40–69 歲</h2>
+      <p class="lead">在 SCORE2 基礎上加入<strong>糖尿病診斷年齡、HbA1c、eGFR</strong>，適用於<strong>第 2 型糖尿病且尚無心血管疾病</strong>的成人。</p>
+      <div class="grid" id="g_s2dm"></div>
+      <div class="result" id="s2dm_result"></div>
+    </div>
+    <div class="card info" id="s2dm_info"></div>
+  </section>
+
+  <section class="card disclaimer">
+    <h3>使用限制與免責</h3>
+    <ul>
+      <li>本工具僅供<strong>醫療專業人員參考</strong>，不能取代臨床判斷，也不是診斷或治療建議。</li>
+      <li><strong>SCORE2 系列是以歐洲族群開發並校正</strong>（低／中／高／極高風險四個歐洲地區）。台灣不屬於這四區，直接套用可能高估或低估；解讀時請留意。2024 年已有針對亞太地區重新校正的 <em>SCORE2-Asia-Pacific</em>，若需要可另外加入本站。</li>
+      <li>SCORE2／SCORE2-OP 僅適用於<strong>未曾發生心血管疾病</strong>者。已有 ASCVD、家族性高膽固醇血症或嚴重標的器官損傷者，本來就屬高／極高風險，不需再算。</li>
+      <li>依 ESC 2021 指引，<strong>中重度 CKD 本身即歸為高或極高心血管風險</strong>；CKD Add-on 的價值在於把風險量化得更精準，而不是用來把病人降級。</li>
+      <li>KFRE 僅適用於 CKD G3–G5。</li>
+      <li>所有計算都在你的瀏覽器本機完成，<strong>不會上傳任何資料</strong>。</li>
+    </ul>
+  </section>
+
+  <section class="card info">
+    <h3>模型來源與驗證</h3>
+    <ul class="refs">
+      <li><strong>KFRE</strong>：Tangri N, et al. JAMA 2011;305:1553-9；Tangri N, et al. JAMA 2016;315:164-74。係數與基準存活率與官方計算器 kidneyfailurerisk.com 逐項核對一致。</li>
+      <li><strong>SCORE2 / SCORE2-OP</strong>：SCORE2 working group. <em>Eur Heart J</em> 2021;42:2439-54；SCORE2-OP working group. <em>Eur Heart J</em> 2021;42:2455-67。</li>
+      <li><strong>CKD Add-on</strong>：Matsushita K, et al.（CKD-PC）<em>Eur J Prev Cardiol</em> 2023;30:8-16。本站演算法已與 CKD-PC 官方計算器（ckdpcrisk.org）針對 40–85 歲、雙性別、四個風險地區、eGFR 15–120、uACR 5–1500 共 280 組數值<strong>逐一比對完全吻合</strong>。</li>
+      <li><strong>SCORE2-Diabetes</strong>：SCORE2-Diabetes working group. <em>Eur Heart J</em> 2023;44:2544-56。以論文內文範例（中風險區 60 歲男性等四組）驗證吻合。</li>
+      <li><strong>風險分級</strong>：ESC 2021 CVD Prevention Guideline（年齡分層門檻）；ESC 2023 Diabetes Guideline（SCORE2-Diabetes 分級）；KDIGO 2024 CKD Guideline（KFRE 門檻）。</li>
+    </ul>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>曾士婷醫師 ・ 內分泌暨新陳代謝科 ・ 本頁資料不離開你的裝置</p>
+</footer>
+
+<script src="app.js?v=20260914"></script>
+</body>
+</html>
